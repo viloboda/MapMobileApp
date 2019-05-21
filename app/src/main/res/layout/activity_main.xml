@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <org.oscim.android.MapView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/map_view"
+        />
+
+    <ImageButton
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="200dp"
+        android:layout_marginBottom="7dp"
+        android:layout_gravity="end"
+        android:src="@drawable/ic_zoom_in_black_28dp"
+        android:background="@drawable/circle_white"
+        android:scaleType="fitXY"
+        android:padding="10dp"
+        android:id="@+id/am_zoom_in"
+        android:elevation="2dp"
+        />
+
+    <ImageButton
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="end"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="256dp"
+        android:src="@drawable/ic_zoom_out_black_28dp"
+        android:background="@drawable/circle_white"
+        android:scaleType="fitXY"
+        android:padding="10dp"
+        android:id="@+id/am_zoom_out"
+        android:elevation="2dp"
+        />
+
+    <ImageButton
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:padding="10dp"
+        android:layout_gravity="end"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="312dp"
+        android:src="@drawable/ic_geoposition_black_28dp"
+        android:scaleType="fitXY"
+        android:id="@+id/am_location"
+        android:elevation="2dp"
+        android:background="@drawable/circle_white"
+        />
+
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_compass_28dp"
+        android:background="@drawable/roundcorner"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:padding="6dp"
+        android:scaleType="fitXY"
+        android:id="@+id/am_compass"
+        />
+
+
+</FrameLayout>

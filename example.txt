@@ -1,0 +1,104 @@
+// Кусок кода для демонстрации подхода с кастомным геокодингом
+// Взят из действующего проекта как есть, без адаптации
+
+@Throws(DataContextException::class)
+override fun getGeoObject(point: YoulaGeoPoint, zoomLevel: Int, objectType: ObjectType): GeoObject? {
+	val jtsPoint = point.toGeometry()
+
+	// Выбираем геометрии из БД
+	val query = "SELECT gd.id, gd.geometry, gd.attributes, gd.type " +
+			"FROM ${TableNames.GEO_INDEX} gi JOIN ${TableNames.GEO_DATA} gd on gi.Id = gd.id " +
+			"WHERE minX <= ? AND maxX >= ? AND minY <= ? AND maxY >= ? "
+	try {
+		this.dataContextFactory.createReadOnly().use { dataContext ->
+			GeoDataCursor(dataContext.executeCursor(query, point.lon, point.lon, point.lat, point.lat)
+			).use { cursor ->
+				return selectGeometry(jtsPoint, objectType, zoomLevel, cursor) as GeoObject?
+			}
+		}
+	} catch (e: Exception) {
+		throw DataContextException(e)
+	}
+}
+
+
+// Из коллекции геометрий, полученных из БД, выбираем ту, в которую попал пользователь
+fun selectGeometry(jtsPoint: Geometry, objectType: ObjectType, zoomLevel: Int, cursor: Iterable<DrawableYoulaDto>): DrawableYoulaDto? {
+    var minDistance = Double.MAX_VALUE
+    var nearestGeoObject: DrawableYoulaDto? = null
+    var objectTypePriority = Int.MAX_VALUE
+    var objectTypeDimension = Dimension.DONTCARE
+
+    val nearestObjects = mutableMapOf<Int, DrawableYoulaDto>()
+
+    cursor
+            .filter {
+
+                var geometry = it.geometry
+                if (geometry.dimension == Dimension.P) {
+                    geometry = geometry.buffer(0.0001)
+                } else if (geometry.dimension == Dimension.L) {
+                    geometry = geometry.buffer(0.00005)
+                }
+
+                geometry != null
+                        && (objectType == ObjectType.None || objectType == it.objectType)
+                        && isAllowedForZoomLevel(zoomLevel, it.objectType)
+                        && within(jtsPoint, geometry)
+            }
+            .forEach {
+                val distance = jtsPoint.distance(it.geometry)
+                val priority = geoPriorities[it.objectType] ?: Int.MAX_VALUE
+
+                if (priority < objectTypePriority) {
+                    nearestObjects.clear()
+                }
+
+                if (priority == objectTypePriority) {
+                    nearestObjects[it.geometry.dimension] = it
+                }
+
+                var condition = false
+                // Если объект приоритетнее - выбираем его
+                if (priority < objectTypePriority) {
+                    condition = true
+                } else if (priority == objectTypePriority) {
+                    // Если приоритеты равны, и текущий объект - точка, а ближайший объект - линия (или полигон), то
+                    // при попадании пина в буфер точки примерно 5 метров выбираем точку.
+                    // Расстояние в этом случае значения не имеет, точка всегда приоритетнее
+                    if (it.geometry.dimension == Dimension.P && (objectTypeDimension == Dimension.L || objectTypeDimension == Dimension.A)) {
+                        condition = jtsPoint.within(it.geometry.buffer(0.00005))
+                        // Если наоборот, текущий объект - линия (полигон), а ближайший объект - точка, то
+                        // линию выберем только в случае, если расстояние до неё меньше, и пин не попадает в буфер точки
+                    } else if ((it.geometry.dimension == Dimension.L || it.geometry.dimension == Dimension.A) && objectTypeDimension == Dimension.P) {
+                        condition =  distance < minDistance &&
+                                !jtsPoint.within(nearestGeoObject!!.geometry.buffer(0.00005))
+                    } else if (it.geometry.dimension == Dimension.L && objectTypeDimension == Dimension.A) {
+                        condition = jtsPoint.within(it.geometry.buffer(0.00001))
+                    } else if (it.geometry.dimension == Dimension.A && objectTypeDimension == Dimension.L) {
+                        condition =  distance < minDistance &&
+                                !jtsPoint.within(nearestGeoObject!!.geometry.buffer(0.00001))
+                    }
+                    else if (distance < minDistance) {
+                        condition = true
+                    }
+
+                    if (!condition && distance == 0.0 && minDistance == 0.0 && nearestGeoObject != null) {
+                        var targetIntersection = nearestGeoObject!!.geometry
+                        if (targetIntersection is GeometryCollection)
+                            targetIntersection = targetIntersection.buffer(0.00001)
+                        val intersectArea = it.geometry.intersection(targetIntersection).area
+                        condition = it.geometry.area - intersectArea < targetIntersection.area - intersectArea
+                    }
+                }
+
+                if (condition) {
+                    minDistance = distance
+                    objectTypePriority = priority
+                    nearestGeoObject = it
+                    objectTypeDimension = it.geometry.dimension
+                }
+            }
+
+    return nearestGeoObject
+}
