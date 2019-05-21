@@ -1,11 +1,11 @@
-// Кусок кода для демонстрации подхода с кастомным геокодингом
-// Взят из действующего проекта как есть, без адаптации
+// РљСѓСЃРѕРє РєРѕРґР° РґР»СЏ РґРµРјРѕРЅСЃС‚СЂР°С†РёРё РїРѕРґС…РѕРґР° СЃ РєР°СЃС‚РѕРјРЅС‹Рј РіРµРѕРєРѕРґРёРЅРіРѕРј
+// Р’Р·СЏС‚ РёР· РґРµР№СЃС‚РІСѓСЋС‰РµРіРѕ РїСЂРѕРµРєС‚Р° РєР°Рє РµСЃС‚СЊ, Р±РµР· Р°РґР°РїС‚Р°С†РёРё
 
 @Throws(DataContextException::class)
 override fun getGeoObject(point: YoulaGeoPoint, zoomLevel: Int, objectType: ObjectType): GeoObject? {
 	val jtsPoint = point.toGeometry()
 
-	// Выбираем геометрии из БД
+	// Р’С‹Р±РёСЂР°РµРј РіРµРѕРјРµС‚СЂРёРё РёР· Р‘Р”
 	val query = "SELECT gd.id, gd.geometry, gd.attributes, gd.type " +
 			"FROM ${TableNames.GEO_INDEX} gi JOIN ${TableNames.GEO_DATA} gd on gi.Id = gd.id " +
 			"WHERE minX <= ? AND maxX >= ? AND minY <= ? AND maxY >= ? "
@@ -22,7 +22,7 @@ override fun getGeoObject(point: YoulaGeoPoint, zoomLevel: Int, objectType: Obje
 }
 
 
-// Из коллекции геометрий, полученных из БД, выбираем ту, в которую попал пользователь
+// РР· РєРѕР»Р»РµРєС†РёРё РіРµРѕРјРµС‚СЂРёР№, РїРѕР»СѓС‡РµРЅРЅС‹С… РёР· Р‘Р”, РІС‹Р±РёСЂР°РµРј С‚Сѓ, РІ РєРѕС‚РѕСЂСѓСЋ РїРѕРїР°Р» РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ
 fun selectGeometry(jtsPoint: Geometry, objectType: ObjectType, zoomLevel: Int, cursor: Iterable<DrawableYoulaDto>): DrawableYoulaDto? {
     var minDistance = Double.MAX_VALUE
     var nearestGeoObject: DrawableYoulaDto? = null
@@ -59,17 +59,17 @@ fun selectGeometry(jtsPoint: Geometry, objectType: ObjectType, zoomLevel: Int, c
                 }
 
                 var condition = false
-                // Если объект приоритетнее - выбираем его
+                // Р•СЃР»Рё РѕР±СЉРµРєС‚ РїСЂРёРѕСЂРёС‚РµС‚РЅРµРµ - РІС‹Р±РёСЂР°РµРј РµРіРѕ
                 if (priority < objectTypePriority) {
                     condition = true
                 } else if (priority == objectTypePriority) {
-                    // Если приоритеты равны, и текущий объект - точка, а ближайший объект - линия (или полигон), то
-                    // при попадании пина в буфер точки примерно 5 метров выбираем точку.
-                    // Расстояние в этом случае значения не имеет, точка всегда приоритетнее
+                    // Р•СЃР»Рё РїСЂРёРѕСЂРёС‚РµС‚С‹ СЂР°РІРЅС‹, Рё С‚РµРєСѓС‰РёР№ РѕР±СЉРµРєС‚ - С‚РѕС‡РєР°, Р° Р±Р»РёР¶Р°Р№С€РёР№ РѕР±СЉРµРєС‚ - Р»РёРЅРёСЏ (РёР»Рё РїРѕР»РёРіРѕРЅ), С‚Рѕ
+                    // РїСЂРё РїРѕРїР°РґР°РЅРёРё РїРёРЅР° РІ Р±СѓС„РµСЂ С‚РѕС‡РєРё РїСЂРёРјРµСЂРЅРѕ 5 РјРµС‚СЂРѕРІ РІС‹Р±РёСЂР°РµРј С‚РѕС‡РєСѓ.
+                    // Р Р°СЃСЃС‚РѕСЏРЅРёРµ РІ СЌС‚РѕРј СЃР»СѓС‡Р°Рµ Р·РЅР°С‡РµРЅРёСЏ РЅРµ РёРјРµРµС‚, С‚РѕС‡РєР° РІСЃРµРіРґР° РїСЂРёРѕСЂРёС‚РµС‚РЅРµРµ
                     if (it.geometry.dimension == Dimension.P && (objectTypeDimension == Dimension.L || objectTypeDimension == Dimension.A)) {
                         condition = jtsPoint.within(it.geometry.buffer(0.00005))
-                        // Если наоборот, текущий объект - линия (полигон), а ближайший объект - точка, то
-                        // линию выберем только в случае, если расстояние до неё меньше, и пин не попадает в буфер точки
+                        // Р•СЃР»Рё РЅР°РѕР±РѕСЂРѕС‚, С‚РµРєСѓС‰РёР№ РѕР±СЉРµРєС‚ - Р»РёРЅРёСЏ (РїРѕР»РёРіРѕРЅ), Р° Р±Р»РёР¶Р°Р№С€РёР№ РѕР±СЉРµРєС‚ - С‚РѕС‡РєР°, С‚Рѕ
+                        // Р»РёРЅРёСЋ РІС‹Р±РµСЂРµРј С‚РѕР»СЊРєРѕ РІ СЃР»СѓС‡Р°Рµ, РµСЃР»Рё СЂР°СЃСЃС‚РѕСЏРЅРёРµ РґРѕ РЅРµС‘ РјРµРЅСЊС€Рµ, Рё РїРёРЅ РЅРµ РїРѕРїР°РґР°РµС‚ РІ Р±СѓС„РµСЂ С‚РѕС‡РєРё
                     } else if ((it.geometry.dimension == Dimension.L || it.geometry.dimension == Dimension.A) && objectTypeDimension == Dimension.P) {
                         condition =  distance < minDistance &&
                                 !jtsPoint.within(nearestGeoObject!!.geometry.buffer(0.00005))
