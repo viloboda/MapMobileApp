@@ -1,34 +1,12 @@
 package com.example.dal;
 
-import com.example.common.ConstantsKt;
-import com.example.common.model.SimpleDto;
-import com.example.common.serialization.JsonSerializer;
-
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
 public final class DataContentValues {
-    public static final String TAG = "ContentValues";
-
     /**
      * Holds the actual values
      */
     private HashMap<String, Object> mValues;
-
-    public static DataContentValues fromDto(JsonSerializer serializer, SimpleDto dto) {
-        String attributes = serializer.toJson(dto);
-        byte[] json = new byte[0];
-        try {
-            json = attributes.getBytes(ConstantsKt.ENCODING);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        DataContentValues values = new DataContentValues();
-        values.put("attributes", json);
-
-        return values;
-    }
 
     /**
      * Creates an empty set of values using the default initial size

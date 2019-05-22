@@ -2,9 +2,11 @@ apply plugin: 'java-library'
 apply plugin: 'kotlin'
 
 dependencies {
+    implementation 'org.locationtech.jts:jts-core:1.15.0'
+    implementation project(path: ':common')
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation project(path: ':common')
 }
 
 sourceCompatibility = "8"

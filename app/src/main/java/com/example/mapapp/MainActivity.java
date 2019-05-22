@@ -5,13 +5,13 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import com.example.common.model.YoulaGeoLocation;
 import com.example.mapapp.map.MapEventsReceiver;
 
 import org.oscim.android.MapView;
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tile;
+import org.oscim.layers.LocationLayer;
 import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.tile.vector.labeling.LabelLayer;
@@ -19,7 +19,6 @@ import org.oscim.map.Map;
 import org.oscim.theme.VtmThemes;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.tiling.source.mapfile.MapInfo;
-import org.oscim.tiling.source.mapfile.MultiMapFileTileSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
         //MultiMapFileTileSource mmtilesource = new MultiMapFileTileSource();
 
-        File baseMapFile = getMapFile("crimean.map");
+        File baseMapFile = getMapFile("cyprus.map");
         MapFileTileSource tileSource = new MapFileTileSource();
         tileSource.setMapFile(baseMapFile.getAbsolutePath());
         //mmtilesource.add(tileSource);
@@ -63,27 +62,29 @@ public class MainActivity extends AppCompatActivity {
         this.map.layers().add(new BuildingLayer(this.map, layer));
         this.map.layers().add(new LabelLayer(this.map, layer));
 
-        CustomLocationLayer locationLayer = new CustomLocationLayer(this.map);
+
+        LocationLayer locationLayer = new LocationLayer(this.map);
         locationLayer.setEnabled(true);
 
         GeoPoint initialGeoPoint = this.map.getMapPosition().getGeoPoint();
-        locationLayer.setPosition(new YoulaGeoLocation(initialGeoPoint.getLongitude(),
-                initialGeoPoint.getLatitude(), 1, this.map.getMapPosition().bearing));
+        locationLayer.setPosition(initialGeoPoint.getLatitude(), initialGeoPoint.getLongitude(), 1);
 
         //this.map.layers().add(locationLayer);
-
-        View vZoomIn = findViewById(R.id.am_zoom_in);
-        vZoomIn.setOnClickListener(v -> zoomIn());
-        vZoomIn.setVisibility(View.INVISIBLE);
-
-        View vZoomOut = findViewById(R.id.am_zoom_out);
-        vZoomOut.setOnClickListener(v -> zoomOut());
-        vZoomOut.setVisibility(View.INVISIBLE);
 
         View vLocation = findViewById(R.id.am_location);
         vLocation.setOnClickListener(v ->
                 this.map.animator().animateTo(initialGeoPoint));
         vLocation.setVisibility(View.INVISIBLE);
+
+        View vZoomIn = findViewById(R.id.am_zoom_in);
+        vZoomIn.setOnClickListener(v ->
+                this.map.animator().animateZoom(500, 2, 0, 0));
+        vZoomIn.setVisibility(View.INVISIBLE);
+
+        View vZoomOut = findViewById(R.id.am_zoom_out);
+        vZoomOut.setOnClickListener(v ->
+                this.map.animator().animateZoom(500, 0.5, 0, 0));
+        vZoomOut.setVisibility(View.INVISIBLE);
 
         View vCompass = findViewById(R.id.am_compass);
         vCompass.setVisibility(View.GONE);
@@ -123,19 +124,11 @@ public class MainActivity extends AppCompatActivity {
         this.map.layers().add(new MapEventsReceiver(this, this.map, tileSource));
     }
 
-    void zoomIn() {
-        this.map.animator().animateZoom(500, 2, 0, 0);
-    }
-
-    public void zoomOut() {
-        this.map.animator().animateZoom(500, 0.5, 0, 0);
-    }
-
     private File getMapFile(String mapFileName) {
         File worldMapFile = new File(getFilesDir(), mapFileName);
         if (!worldMapFile.exists()) {
             try(InputStream inputStream = getResources().openRawResource(
-                    mapFileName.equals("world.map") ? R.raw.world : R.raw.crimean)) {
+                    mapFileName.equals("world.map") ? R.raw.world : R.raw.cyprus)) {
                 FileHelper.copyFile(inputStream, worldMapFile);
             } catch (IOException e) {
                 e.printStackTrace();

@@ -1,6 +1,6 @@
 package com.example.mapapp;
 
-import com.example.common.model.YoulaGeoLocation;
+import model.GeoLocation;
 
 import org.oscim.backend.CanvasAdapter;
 import org.oscim.backend.GL;
@@ -42,7 +42,7 @@ public class CustomLocationLayer extends Layer {
         super.setEnabled(enabled);
     }
 
-    void setPosition(YoulaGeoLocation location) {
+    void setPosition(GeoLocation location) {
         double x = MercatorProjection.longitudeToX(location.getLon());
         double y = MercatorProjection.latitudeToY(location.getLat());
         double radius = location.getAccuracy() / MercatorProjection.groundResolutionWithScale(location.getLat(), 1);
