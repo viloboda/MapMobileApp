@@ -19,6 +19,7 @@ import org.oscim.map.Map;
 import org.oscim.theme.VtmThemes;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 import org.oscim.tiling.source.mapfile.MapInfo;
+import org.oscim.tiling.source.mapfile.MultiMapFileTileSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,20 +37,20 @@ public class MainActivity extends AppCompatActivity {
         MapView mapView = findViewById(R.id.map_view);
         this.map = mapView.map();
 
-        //MultiMapFileTileSource mmtilesource = new MultiMapFileTileSource();
+        MultiMapFileTileSource mmtilesource = new MultiMapFileTileSource();
 
         File baseMapFile = getMapFile("cyprus.map");
         MapFileTileSource tileSource = new MapFileTileSource();
         tileSource.setMapFile(baseMapFile.getAbsolutePath());
-        //mmtilesource.add(tileSource);
+        mmtilesource.add(tileSource);
 
         MapFileTileSource worldTileSource = new MapFileTileSource();
 
         File worldMapFile = getMapFile("world.map");
         worldTileSource.setMapFile(worldMapFile.getAbsolutePath());
-        //mmtilesource.add(worldTileSource);
+        mmtilesource.add(worldTileSource);
 
-        VectorTileLayer layer = this.map.setBaseMap(tileSource);
+        VectorTileLayer layer = this.map.setBaseMap(mmtilesource);
         MapInfo info = tileSource.getMapInfo();
         if (info != null) {
             MapPosition pos = new MapPosition();
@@ -69,22 +70,19 @@ public class MainActivity extends AppCompatActivity {
         GeoPoint initialGeoPoint = this.map.getMapPosition().getGeoPoint();
         locationLayer.setPosition(initialGeoPoint.getLatitude(), initialGeoPoint.getLongitude(), 1);
 
-        //this.map.layers().add(locationLayer);
+        this.map.layers().add(locationLayer);
 
         View vLocation = findViewById(R.id.am_location);
         vLocation.setOnClickListener(v ->
                 this.map.animator().animateTo(initialGeoPoint));
-        vLocation.setVisibility(View.INVISIBLE);
 
         View vZoomIn = findViewById(R.id.am_zoom_in);
         vZoomIn.setOnClickListener(v ->
                 this.map.animator().animateZoom(500, 2, 0, 0));
-        vZoomIn.setVisibility(View.INVISIBLE);
 
         View vZoomOut = findViewById(R.id.am_zoom_out);
         vZoomOut.setOnClickListener(v ->
                 this.map.animator().animateZoom(500, 0.5, 0, 0));
-        vZoomOut.setVisibility(View.INVISIBLE);
 
         View vCompass = findViewById(R.id.am_compass);
         vCompass.setVisibility(View.GONE);
