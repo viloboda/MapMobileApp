@@ -1,1 +1,1 @@
-include ':app', ':dal', ':common', ':sqlite3-release'
+include ':app', ':common'

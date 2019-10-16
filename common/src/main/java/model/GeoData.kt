@@ -2,7 +2,6 @@ package model
 
 import org.locationtech.jts.geom.Geometry
 
-class GeoData(var id: Long,
+class GeoData(var id: Int,
               var geometry: Geometry,
-              var objectType: ObjectType,
-              var attributes: String?)
+              var objectType: ObjectType)

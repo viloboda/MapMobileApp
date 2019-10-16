@@ -3,11 +3,19 @@ package com.example.mapapp;
 import android.animation.Animator;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 
+import com.example.mapapp.controls.FloorPickerControl;
+import com.example.mapapp.map.FloorsManager;
 import com.example.mapapp.map.MapEventsReceiver;
 
+import org.locationtech.jts.geom.Coordinate;
 import org.oscim.android.MapView;
+import org.oscim.core.BoundingBox;
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
 import org.oscim.core.Tile;
@@ -24,16 +32,33 @@ import org.oscim.tiling.source.mapfile.MultiMapFileTileSource;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import model.FloorData;
 
 public class MainActivity extends AppCompatActivity {
 
     private Map map;
+    private FloorData floorData;
+    private FloorPickerControl floorPicker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Toolbar toolbar = findViewById(R.id.tool_bar);
+        setSupportActionBar(toolbar);
+
+        initMap();
+        initLocationLayer();
+        initMapActionButtons();
+
+        initFloors();
+    }
+
+    private void initMap() {
         MapView mapView = findViewById(R.id.map_view);
         this.map = mapView.map();
 
@@ -62,8 +87,10 @@ public class MainActivity extends AppCompatActivity {
 
         this.map.layers().add(new BuildingLayer(this.map, layer));
         this.map.layers().add(new LabelLayer(this.map, layer));
+        this.map.layers().add(new MapEventsReceiver(this, this.map, tileSource));
+    }
 
-
+    private void initLocationLayer() {
         LocationLayer locationLayer = new LocationLayer(this.map);
         locationLayer.setEnabled(true);
 
@@ -75,7 +102,9 @@ public class MainActivity extends AppCompatActivity {
         View vLocation = findViewById(R.id.am_location);
         vLocation.setOnClickListener(v ->
                 this.map.animator().animateTo(initialGeoPoint));
+    }
 
+    private void initMapActionButtons() {
         View vZoomIn = findViewById(R.id.am_zoom_in);
         vZoomIn.setOnClickListener(v ->
                 this.map.animator().animateZoom(500, 2, 0, 0));
@@ -118,8 +147,19 @@ public class MainActivity extends AppCompatActivity {
                 vCompass.setVisibility(View.VISIBLE);
             }
         });
+    }
 
-        this.map.layers().add(new MapEventsReceiver(this, this.map, tileSource));
+    private void initFloors() {
+        floorData = new FloorData();
+        FloorsManager floorsManager = new FloorsManager(floorData);
+        floorsManager.init(this.map);
+        floorsManager.drawFloor(1);
+
+        floorPicker = findViewById(R.id.am_floors_picker);
+        floorPicker.setOnSelectionChanged(floor -> floorsManager.drawFloor(floor.getId()));
+        floorPicker.setItems(floorData.getFloors());
+        floorPicker.setSelectedIndex(0);
+        floorPicker.setVisibility(View.INVISIBLE);
     }
 
     private File getMapFile(String mapFileName) {
@@ -133,5 +173,30 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return worldMapFile;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.show_floors) {
+            Coordinate[] coords = floorData.getFloorBuilding().getCoordinates();
+            List<GeoPoint> points = new ArrayList<>(coords.length);
+            for (Coordinate c : coords) {
+                points.add(new GeoPoint(c.y, c.x));
+            }
+
+            this.map.animator().animateTo(new BoundingBox(points));
+
+            floorPicker.setVisibility(View.VISIBLE);
+            floorPicker.requestLayout();
+        }
+
+        return true;
     }
 }

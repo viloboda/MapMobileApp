@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class FileHelper {
-    public static void copyFile(InputStream src, File dst) throws IOException {
+class FileHelper {
+    static void copyFile(InputStream src, File dst) throws IOException {
         try (InputStream in = src) {
             try (OutputStream out = new FileOutputStream(dst)) {
                 // Transfer bytes from in to out

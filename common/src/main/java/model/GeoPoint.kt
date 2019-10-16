@@ -14,8 +14,8 @@ open class GeoPoint internal constructor(
 
     override fun toString(): String {
         return String.format(Locale.getDefault(), "Lat = %s, Lon = %s",
-                java.lang.Double.toString(lat),
-                java.lang.Double.toString(lon))
+                lat.toString(),
+                lon.toString())
     }
 
     fun toGeometry(): Geometry {
